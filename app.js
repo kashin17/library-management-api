@@ -35,7 +35,7 @@ app.use((req, res, next) => {
       "frame-src 'self';"
     );
   }
-  // next();
+  next();
 });
 
 
