@@ -144,7 +144,128 @@ try {
   });
 }
 
-
+app.get('/docs', (req, res) => {
+  const baseUrl = req.protocol + '://' + req.get('host');
+  
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Library Management API Documentation</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .endpoint { margin: 20px 0; padding: 15px; border-left: 4px solid #007bff; background: #f8f9fa; }
+        .method { display: inline-block; padding: 4px 8px; border-radius: 4px; font-weight: bold; margin-right: 10px; }
+        .get { background: #28a745; color: white; }
+        .post { background: #007bff; color: white; }
+        .put { background: #ffc107; color: black; }
+        .delete { background: #dc3545; color: white; }
+        pre { background: #f1f1f1; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        .test-button { background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Library Management API Documentation</h1>
+    <p><strong>Base URL:</strong> ${baseUrl}</p>
+    
+    <div class="endpoint">
+        <span class="method get">GET</span><strong>/api/books</strong>
+        <p>Get all books with pagination</p>
+        <p><strong>Query Parameters:</strong> page (default: 1), limit (default: 10)</p>
+        <button class="test-button" onclick="testEndpoint('/api/books')">Test</button>
+    </div>
+    
+    <div class="endpoint">
+        <span class="method post">POST</span><strong>/api/books</strong>
+        <p>Create a new book</p>
+        <p><strong>Body:</strong></p>
+        <pre>{
+  "title": "Book Title",
+  "author": "Author Name",
+  "genre": "Fiction",
+  "publishedYear": 2023,
+  "ISBN": "1234567890123",
+  "stockCount": 10
+}</pre>
+        <button class="test-button" onclick="showPostTest()">Test</button>
+    </div>
+    
+    <div class="endpoint">
+        <span class="method get">GET</span><strong>/api/books/search</strong>
+        <p>Search books with fuzzy matching</p>
+        <p><strong>Query Parameters:</strong> q (required), page, limit</p>
+        <button class="test-button" onclick="testEndpoint('/api/books/search?q=harry')">Test</button>
+    </div>
+    
+    <div class="endpoint">
+        <span class="method get">GET</span><strong>/api/books/:id</strong>
+        <p>Get a specific book by ID</p>
+        <button class="test-button" onclick="alert('Replace :id with actual book ID')">Test</button>
+    </div>
+    
+    <div class="endpoint">
+        <span class="method put">PUT</span><strong>/api/books/:id</strong>
+        <p>Update a specific book</p>
+        <p><strong>Body:</strong> Same as POST (all fields optional)</p>
+    </div>
+    
+    <div class="endpoint">
+        <span class="method delete">DELETE</span><strong>/api/books/:id</strong>
+        <p>Delete a specific book</p>
+    </div>
+    
+    <div id="result" style="margin-top: 20px;"></div>
+    
+    <script>
+        async function testEndpoint(endpoint) {
+            try {
+                const response = await fetch('${baseUrl}' + endpoint);
+                const data = await response.json();
+                document.getElementById('result').innerHTML = 
+                    '<h3>Response:</h3><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    '<h3>Error:</h3><pre>' + error.message + '</pre>';
+            }
+        }
+        
+        function showPostTest() {
+            document.getElementById('result').innerHTML = \`
+                <h3>Test POST /api/books</h3>
+                <textarea id="postData" rows="8" cols="50">{
+  "title": "Test Book",
+  "author": "Test Author", 
+  "genre": "Fiction",
+  "publishedYear": 2023,
+  "ISBN": "1234567890123",
+  "stockCount": 5
+}</textarea><br>
+                <button onclick="submitPost()">Submit</button>
+            \`;
+        }
+        
+        async function submitPost() {
+            try {
+                const data = JSON.parse(document.getElementById('postData').value);
+                const response = await fetch('${baseUrl}/api/books', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                document.getElementById('result').innerHTML += 
+                    '<h3>Response:</h3><pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML += 
+                    '<h3>Error:</h3><pre>' + error.message + '</pre>';
+            }
+        }
+    </script>
+</body>
+</html>`;
+  
+  res.send(html);
+});
 
 
 

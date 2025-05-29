@@ -142,6 +142,7 @@ const swaggerOptions = {
     showExtensions: true,
     showCommonExtensions: true,
     tryItOutEnabled: true,
+    debug: true
   },
   customCss: `
     .swagger-ui .topbar { display: none }
@@ -158,8 +159,8 @@ const swaggerOptions = {
     }
   `,
   customSiteTitle: 'Library Management API Documentation',
-  customfavIcon: '/favicon.ico',
-  customJs: '/swagger-custom.js', // We'll create this if needed
+  // customfavIcon: '/favicon.ico',
+  // customJs: '/swagger-custom.js', // We'll create this if needed
 };
 
 module.exports = {
