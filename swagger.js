@@ -1,6 +1,5 @@
 // swagger.js - Swagger configuration file optimized for Vercel
 const swaggerJsdoc = require('swagger-jsdoc');
-const swaggerUi = require('swagger-ui-express');
 
 const options = {
   definition: {
@@ -225,9 +224,7 @@ const swaggerOptions = {
 };
 
 module.exports = {
-  swaggerUi,
   specs,
-  swaggerOptions,
 };
 
 

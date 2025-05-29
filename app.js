@@ -8,7 +8,8 @@ const logger = require('./middleware/logger');
 const limiter = require('./middleware/rateLimiter');
 const connectDB = require('./config/db');
 
-const { swaggerUi, specs, swaggerOptions } = require('./swagger');
+// Only import swagger specs (not the UI)
+const { specs } = require('./swagger');
 
 const app = express();
 
@@ -70,66 +71,107 @@ app.get('/health', (req, res) => {
 // Serve Swagger JSON
 app.get('/swagger.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
-  res.setHeader('Cache-Control', 'no-cache'); // Don't cache for debugging
+  res.setHeader('Cache-Control', 'no-cache');
   res.json(specs);
 });
 
-// Alternative JSON endpoint for debugging
-app.get('/api-docs-json', (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
-  res.json(specs);
+// Custom Swagger UI route that works reliably on Vercel
+app.get('/api-docs', (req, res) => {
+  const swaggerHtml = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Library Management API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui.css" />
+      <style>
+        html {
+          box-sizing: border-box;
+          overflow: -moz-scrollbars-vertical;
+          overflow-y: scroll;
+        }
+        *, *:before, *:after {
+          box-sizing: inherit;
+        }
+        body {
+          margin:0;
+          background: #fafafa;
+        }
+        .swagger-ui .topbar {
+          display: none;
+        }
+        #swagger-ui {
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+        .loading {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 200px;
+          font-size: 18px;
+          color: #3b4151;
+        }
+      </style>
+    </head>
+    <body>
+      <div id="swagger-ui">
+        <div class="loading">Loading API Documentation...</div>
+      </div>
+      
+      <script src="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-bundle.js"></script>
+      <script src="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-standalone-preset.js"></script>
+      <script>
+        window.onload = function() {
+          try {
+            console.log('Initializing Swagger UI...');
+            const ui = SwaggerUIBundle({
+              url: window.location.origin + '/swagger.json',
+              dom_id: '#swagger-ui',
+              deepLinking: true,
+              presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIStandalonePreset
+              ],
+              plugins: [
+                SwaggerUIBundle.plugins.DownloadUrl
+              ],
+              layout: "StandaloneLayout",
+              validatorUrl: null,
+              tryItOutEnabled: true,
+              supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
+              onComplete: function() {
+                console.log('Swagger UI loaded successfully');
+              },
+              onFailure: function(data) {
+                console.error('Swagger UI failed to load:', data);
+                document.getElementById('swagger-ui').innerHTML = 
+                  '<div style="padding: 20px; text-align: center;">' +
+                  '<h2>Failed to load API documentation</h2>' +
+                  '<p>Error: ' + JSON.stringify(data) + '</p>' +
+                  '<p><a href="/swagger.json">View raw API specification</a></p>' +
+                  '</div>';
+              }
+            });
+          } catch (error) {
+            console.error('Error initializing Swagger UI:', error);
+            document.getElementById('swagger-ui').innerHTML = 
+              '<div style="padding: 20px; text-align: center;">' +
+              '<h2>Error loading Swagger UI</h2>' +
+              '<p>' + error.message + '</p>' +
+              '<p><a href="/swagger.json">View raw API specification</a></p>' +
+              '</div>';
+          }
+        };
+      </script>
+    </body>
+    </html>
+  `;
+  
+  res.setHeader('Content-Type', 'text/html');
+  res.send(swaggerHtml);
 });
-
-// Swagger UI setup - simplified approach for Vercel
-app.use('/api-docs', swaggerUi.serve);
-app.get('/api-docs', swaggerUi.setup(specs, {
-  explorer: false,
-  swaggerOptions: {
-    dom_id: '#swagger-ui',
-    deepLinking: true,
-    presets: [
-      'SwaggerUIBundle.presets.apis',
-      'SwaggerUIBundle.presets.standalone'
-    ],
-    plugins: [
-      'SwaggerUIBundle.plugins.DownloadUrl'
-    ],
-    layout: "StandaloneLayout",
-    validatorUrl: null, // Disable validator
-    tryItOutEnabled: true,
-    supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
-    onComplete: function() {
-      console.log('Swagger UI loaded successfully');
-    },
-    onFailure: function(data) {
-      console.error('Swagger UI failed to load:', data);
-    }
-  },
-  customCss: `
-    .swagger-ui .topbar { display: none }
-    .swagger-ui .scheme-container { 
-      background: none; 
-      box-shadow: none; 
-    }
-    .swagger-ui .info {
-      margin: 50px 0;
-    }
-    .swagger-ui .info .title {
-      font-size: 36px;
-      color: #3b4151;
-    }
-  `,
-  customSiteTitle: 'Library Management API Documentation',
-  customJs: `
-    window.onload = function() {
-      console.log('Swagger UI page loaded');
-      if (typeof SwaggerUIBundle === 'undefined') {
-        console.error('SwaggerUIBundle is not defined');
-        document.body.innerHTML = '<div style="padding: 20px;"><h1>Swagger UI Loading Error</h1><p>SwaggerUIBundle is not available. Please check your internet connection and refresh the page.</p></div>';
-      }
-    };
-  `
-}));
 
 // Routes
 app.use('/books', bookRoutes);
@@ -146,21 +188,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// 404 handler
-// app.use('*', (req, res) => {
-//   res.status(404).json({ 
-//     message: 'Route not found',
-//     path: req.originalUrl,
-//     available_routes: [
-//       '/',
-//       '/health',
-//       '/api-docs',
-//       '/swagger.json',
-//       '/books',
-//       '/books/search'
-//     ]
-//   });
-// });
+
 
 // Global error handling middleware
 app.use((err, req, res, next) => {
