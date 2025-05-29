@@ -19,7 +19,7 @@ bookSchema.index({
 });
 
 // Add individual indexes for common queries
-bookSchema.index({ ISBN: 1 }); // Already unique, but explicit index
+// bookSchema.index({ ISBN: 1 }); // Already unique, but explicit index
 bookSchema.index({ genre: 1 });
 bookSchema.index({ author: 1 });
 bookSchema.index({ publishedYear: 1 });
