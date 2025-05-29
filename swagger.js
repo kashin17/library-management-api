@@ -130,7 +130,23 @@ const options = {
 
 const specs = swaggerJsdoc(options);
 
+// Vercel-optimized Swagger UI options
+const swaggerOptions = {
+  explorer: true,
+  swaggerOptions: {
+    url: '/swagger.json', // We'll serve the JSON separately
+    persistAuthorization: true,
+  },
+  customCss: `
+    .swagger-ui .topbar { display: none }
+    .swagger-ui .scheme-container { background: none; box-shadow: none; }
+  `,
+  customSiteTitle: 'Library Management API',
+  customfavIcon: '/favicon.ico',
+};
+
 module.exports = {
   swaggerUi,
   specs,
+  swaggerOptions,
 };
