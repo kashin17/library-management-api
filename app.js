@@ -147,20 +147,20 @@ app.get('/', (req, res) => {
 });
 
 // 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ 
-    message: 'Route not found',
-    path: req.originalUrl,
-    available_routes: [
-      '/',
-      '/health',
-      '/api-docs',
-      '/swagger.json',
-      '/books',
-      '/books/search'
-    ]
-  });
-});
+// app.use('*', (req, res) => {
+//   res.status(404).json({ 
+//     message: 'Route not found',
+//     path: req.originalUrl,
+//     available_routes: [
+//       '/',
+//       '/health',
+//       '/api-docs',
+//       '/swagger.json',
+//       '/books',
+//       '/books/search'
+//     ]
+//   });
+// });
 
 // Global error handling middleware
 app.use((err, req, res, next) => {
